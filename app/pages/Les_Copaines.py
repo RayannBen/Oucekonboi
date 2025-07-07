@@ -7,6 +7,16 @@ from geopy.geocoders import Nominatim
 st.title("👥 Les Copaines")
 st.markdown("### Inscrivez vos amis et leurs adresses")
 
+st.info(
+    """
+🌍 **Nouvelle fonctionnalité :** L'application accepte maintenant les adresses partout en France et même dans le monde !
+- ✅ Paris et banlieue parisienne
+- ✅ Toute la France (Lyon, Marseille, Bordeaux, etc.)
+- ✅ International (précisez bien la ville et le pays)
+- 🏴󠁧󠁢󠁥󠁮󠁧󠁿 Option pour forcer la recherche à Paris si l'adresse est incomplète
+"""
+)
+
 # Fichier pour stocker les données des amis
 DATA_FILE = "data/friends.json"
 
@@ -28,15 +38,23 @@ def save_friends(friends):
 
 # Fonction pour géocoder une adresse
 @st.cache_data
-def geocode_address(address):
+def geocode_address(address, force_paris=False):
     try:
         geolocator = Nominatim(user_agent="oucekonboi_app")
-        location = geolocator.geocode(f"{address}, Paris, France")
+
+        # Si force_paris est activé, on ajoute Paris, France
+        if force_paris:
+            full_address = f"{address}, Paris, France"
+        else:
+            # Sinon, on cherche l'adresse telle quelle
+            full_address = address
+
+        location = geolocator.geocode(full_address)
         if location:
-            return location.latitude, location.longitude
-        return None, None
-    except:
-        return None, None
+            return location.latitude, location.longitude, location.address
+        return None, None, None
+    except Exception:
+        return None, None, None
 
 
 # Charger les amis existants
@@ -54,7 +72,15 @@ with st.form("add_friend"):
 
     with col2:
         address = st.text_area(
-            "Adresse à Paris", placeholder="Ex: 15 rue de Rivoli, 75001 Paris"
+            "Adresse complète",
+            placeholder="Ex: 15 rue de Rivoli, 75001 Paris\nou: 123 Main St, Lyon, France",
+        )
+
+        # Option pour forcer la recherche à Paris
+        force_paris = st.checkbox(
+            "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Rechercher uniquement à Paris",
+            value=False,
+            help="Cochez cette case si l'adresse saisie est incomplète et doit être recherchée uniquement à Paris",
         )
 
     submitted = st.form_submit_button("Ajouter l'ami")
@@ -63,7 +89,7 @@ with st.form("add_friend"):
         if name and address:
             # Géocoder l'adresse
             with st.spinner("Vérification de l'adresse..."):
-                lat, lon = geocode_address(address)
+                lat, lon, full_address = geocode_address(address, force_paris)
 
             if lat and lon:
                 # Vérifier si l'ami existe déjà
@@ -76,7 +102,7 @@ with st.form("add_friend"):
                         f"Un ami nommé {name} existe déjà. Mise à jour de ses informations."
                     )
                     existing_friend["email"] = email
-                    existing_friend["address"] = address
+                    existing_friend["address"] = full_address or address
                     existing_friend["latitude"] = lat
                     existing_friend["longitude"] = lon
                 else:
@@ -84,7 +110,7 @@ with st.form("add_friend"):
                     new_friend = {
                         "name": name,
                         "email": email,
-                        "address": address,
+                        "address": full_address or address,
                         "latitude": lat,
                         "longitude": lon,
                     }
@@ -95,9 +121,14 @@ with st.form("add_friend"):
                 st.success(f"✅ {name} a été ajouté avec succès!")
                 st.rerun()
             else:
-                st.error(
-                    "❌ Impossible de localiser cette adresse. Vérifiez qu'elle est bien à Paris."
-                )
+                if force_paris:
+                    st.error(
+                        "❌ Impossible de localiser cette adresse. Vérifiez qu'elle est bien à Paris."
+                    )
+                else:
+                    st.error(
+                        "❌ Impossible de localiser cette adresse. Vérifiez l'orthographe et incluez la ville/pays si nécessaire."
+                    )
         else:
             st.error("❌ Veuillez remplir au moins le nom et l'adresse.")
 
@@ -150,9 +181,22 @@ else:
     # Exemple pour aider l'utilisateur
     st.markdown(
         """
-    **💡 Exemples d'adresses valides à Paris :**
+    **💡 Exemples d'adresses valides :**
+    
+    **À Paris :**
     - 1 Place de la Concorde, 75001 Paris
     - 15 Avenue des Champs-Élysées, 75008 Paris
     - 5 Avenue Anatole France, 75007 Paris (Tour Eiffel)
+    
+    **En banlieue parisienne :**
+    - 1 Parvis de la Défense, 92800 Puteaux
+    - Avenue du Château, 78000 Versailles
+    
+    **En France :**
+    - Place Bellecour, 69002 Lyon
+    - 2 Rue Esprit des Lois, 33000 Bordeaux
+    - 1 Promenade des Anglais, 06000 Nice
+    
+    **Conseil :** Pour les adresses en dehors de Paris, soyez plus précis en incluant la ville et le code postal.
     """
     )
