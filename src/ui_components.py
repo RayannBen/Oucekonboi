@@ -45,7 +45,7 @@ def display_center_info(center_lat, center_lon):
             "🔍 Rayon de recherche (km)",
             min_value=0.05,
             max_value=2.0,
-            value=0.5,
+            value=0.6,
             step=0.1,
             help="Distance maximum pour rechercher les bars autour du centre du groupe",
         )
@@ -69,7 +69,9 @@ def display_search_results(bars_count):
     st.success(f"✅ {bars_count} bars trouvés autour du centre du groupe")
 
 
-def display_statistics(friends, bars, best_bar):
+def display_statistics(
+    friends, bars, best_bar, metric_type="Distance moyenne", metric_unit="km"
+):
     """
     Affiche les statistiques de l'application.
 
@@ -77,6 +79,8 @@ def display_statistics(friends, bars, best_bar):
         friends (list): Liste des amis
         bars (list): Liste des bars
         best_bar (dict): Meilleur bar recommandé
+        metric_type (str): Type de métrique (Distance/Temps)
+        metric_unit (str): Unité de la métrique (km/min)
     """
     st.subheader("📊 Statistiques")
     col1, col2, col3, col4 = st.columns(4)
@@ -91,33 +95,56 @@ def display_statistics(friends, bars, best_bar):
         st.metric("Meilleur bar", best_bar["name"])
 
     with col4:
-        st.metric("Distance moyenne", f"{best_bar['avg_distance']:.1f} km")
+        value = best_bar.get("avg_time", best_bar.get("avg_distance", 0))
+        st.metric(metric_type, f"{value:.1f} {metric_unit}")
 
 
-def display_bars_ranking(bars_sorted):
+def display_bars_ranking(bars_sorted, metric_type="Distance moyenne", metric_unit="km"):
     """
     Affiche le classement des bars recommandés.
 
     Args:
-        bars_sorted (list): Liste des bars triés par distance
+        bars_sorted (list): Liste des bars triés par distance/temps
+        metric_type (str): Type de métrique
+        metric_unit (str): Unité de métrique
     """
     st.subheader("🏆 Top 10 des bars recommandés")
 
     # Créer un DataFrame pour l'affichage
-    
     df_bars = pd.DataFrame(bars_sorted[:10])
-    df_display = df_bars[["name", "type", "address", "avg_distance"]].copy()
-    df_display.columns = ["Nom du bar", "Type", "Adresse", "Distance moyenne (km)"]
-    df_display["Distance moyenne (km)"] = df_display["Distance moyenne (km)"].round(1)
+
+    # Choisir la colonne métrique appropriée
+    metric_col = "avg_time" if "avg_time" in df_bars.columns else "avg_distance"
+
+    df_display = df_bars[["name", "type", "address", metric_col]].copy()
+    df_display.columns = [
+        "Nom du bar",
+        "Type",
+        "Adresse",
+        f"{metric_type} ({metric_unit})",
+    ]
+    df_display[f"{metric_type} ({metric_unit})"] = df_display[
+        f"{metric_type} ({metric_unit})"
+    ].round(1)
 
     # Ajouter des emojis pour le classement
-    rankings = ["🥇", "🥈", "🥉"] + ["🏅"] * 7
+    bar_number = len(df_display)
+    medals_number_to_add = (bar_number - 3) if bar_number != 10 else 7
+    rankings = ["🥇", "🥈", "🥉"] + ["🏅"] * medals_number_to_add
     df_display.insert(0, "Rang", rankings)
 
     st.dataframe(df_display, use_container_width=True)
 
 
-def display_best_bar_details(best_bar, friends, center_lat, center_lon):
+def display_best_bar_details(
+    best_bar,
+    friends,
+    center_lat,
+    center_lon,
+    use_transit=False,
+    metric_type="Distance moyenne",
+    metric_unit="km",
+):
     """
     Affiche les détails du meilleur bar recommandé.
 
@@ -126,17 +153,32 @@ def display_best_bar_details(best_bar, friends, center_lat, center_lon):
         friends (list): Liste des amis
         center_lat (float): Latitude du centre
         center_lon (float): Longitude du centre
+        use_transit (bool): Si True, utilise les temps de transport
+        metric_type (str): Type de métrique
+        metric_unit (str): Unité de métrique
     """
     st.subheader("🎯 Recommandation principale")
 
-    # Calculer la distance du bar au barycentre
-    distance_to_center = geodesic(
-        (best_bar["lat"], best_bar["lon"]), (center_lat, center_lon)
-    ).kilometers
+    # Calculer la distance/temps du bar au barycentre
+    if use_transit:
+        from src.transit_utils import get_transit_time
+
+        time_to_center = get_transit_time(
+            best_bar["lat"], best_bar["lon"], center_lat, center_lon
+        )
+        center_metric = f"{time_to_center:.0f} min"
+        center_label = "🚇 Temps vers le centre"
+    else:
+        distance_to_center = geodesic(
+            (best_bar["lat"], best_bar["lon"]), (center_lat, center_lon)
+        ).kilometers
+        center_metric = f"{distance_to_center:.1f} km"
+        center_label = "🎯 Distance du centre"
 
     col1, col2 = st.columns(2)
 
     with col1:
+        main_value = best_bar.get("avg_time", best_bar.get("avg_distance", 0))
         st.markdown(
             f"""
         **🏆 {best_bar['name']}**
@@ -145,21 +187,35 @@ def display_best_bar_details(best_bar, friends, center_lat, center_lon):
         
         🍻 **Type :** {best_bar['type']}
         
-        📏 **Distance moyenne :** {best_bar['avg_distance']:.1f} km de vos amis
+        📏 **{metric_type} :** {main_value:.1f} {metric_unit} de vos amis
         
-        🎯 **Distance du centre :** {distance_to_center:.1f} km du barycentre
+        {center_label} :** {center_metric} du barycentre
         """
         )
 
     with col2:
-        st.markdown("**📊 Distances individuelles :**")
-        for friend in friends:
-            if friend.get("latitude") and friend.get("longitude"):
-                distance = geodesic(
-                    (best_bar["lat"], best_bar["lon"]),
-                    (friend["latitude"], friend["longitude"]),
-                ).kilometers
-                st.write(f"• {friend['name']}: {distance:.1f} km")
+        st.markdown(f"**📊 {metric_type} individuelles :**")
+
+        if use_transit:
+            from src.transit_utils import get_transit_time
+
+            for friend in friends:
+                if friend.get("latitude") and friend.get("longitude"):
+                    time_minutes = get_transit_time(
+                        friend["latitude"],
+                        friend["longitude"],
+                        best_bar["lat"],
+                        best_bar["lon"],
+                    )
+                    st.write(f"🚇 {friend['name']}: {time_minutes:.0f} min")
+        else:
+            for friend in friends:
+                if friend.get("latitude") and friend.get("longitude"):
+                    distance = geodesic(
+                        (best_bar["lat"], best_bar["lon"]),
+                        (friend["latitude"], friend["longitude"]),
+                    ).kilometers
+                    st.write(f"• {friend['name']}: {distance:.1f} km")
 
 
 def display_refresh_button():

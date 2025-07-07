@@ -7,7 +7,7 @@ import streamlit as st
 
 
 @st.cache_data
-def get_bars_around_center(center_lat, center_lon, radius_km: float = 0.5):
+def get_bars_around_center(center_lat, center_lon, radius_km: float = 0.6):
     """
     Recherche des bars autour du centre géographique du groupe d'amis
     en utilisant l'API Overpass d'OpenStreetMap.
@@ -91,7 +91,7 @@ def get_bars_around_center(center_lat, center_lon, radius_km: float = 0.5):
         if len(bars) < 10:
             bars.extend(get_fallback_bars(center_lat, center_lon))
 
-        return bars[:20]  # Limiter à 20 bars maximum
+        return bars[:10]  # Limiter à 10 bars maximum
 
     except Exception as e:
         st.error(f"Erreur lors de la recherche de bars: {str(e)}")
