@@ -119,8 +119,10 @@ st.subheader("📋 Amis enregistrés")
 if friends:
     # Créer un DataFrame pour l'affichage
     df_display = pd.DataFrame(friends)
-    df_display = df_display[["name", "email", "address"]].fillna("")
-    df_display.columns = ["Nom", "Email", "Adresse"]
+    df_display = df_display[
+        ["name", "email", "address", "latitude", "longitude"]
+    ].fillna("")
+    df_display.columns = ["Nom", "Email", "Adresse", "Latitude", "Longitude"]
 
     st.dataframe(df_display, use_container_width=True)
 

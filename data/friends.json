@@ -12,5 +12,26 @@
     "address": "12 Rue Louis Morard, 75014 Paris",
     "latitude": 48.8286562,
     "longitude": 2.3209494
+  },
+  {
+    "name": "Annick",
+    "email": "",
+    "address": "154, Rue du Temple, Quartier des Enfants-Rouges, Paris 3e Arrondissement, Paris, Île-de-France, France métropolitaine, 75003, France",
+    "latitude": 48.8644602,
+    "longitude": 2.3594338
+  },
+  {
+    "name": "Harvid",
+    "email": "",
+    "address": "1, Rue de la Petite Prusse, Quatre Chemins, Pantin, Bobigny, Seine-Saint-Denis, France métropolitaine, 93500, France",
+    "latitude": 48.904816,
+    "longitude": 2.3966701
+  },
+  {
+    "name": "Alics",
+    "email": "",
+    "address": "2 bis, Rue Winston Churchill, Vilmorin, Massy, Palaiseau, Essonne, France métropolitaine, 91300, France",
+    "latitude": 48.7277927,
+    "longitude": 2.2576033
   }
 ]

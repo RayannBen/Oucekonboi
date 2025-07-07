@@ -104,6 +104,7 @@ def display_bars_ranking(bars_sorted):
     st.subheader("🏆 Top 10 des bars recommandés")
 
     # Créer un DataFrame pour l'affichage
+    
     df_bars = pd.DataFrame(bars_sorted[:10])
     df_display = df_bars[["name", "type", "address", "avg_distance"]].copy()
     df_display.columns = ["Nom du bar", "Type", "Adresse", "Distance moyenne (km)"]
