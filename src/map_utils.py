@@ -77,7 +77,7 @@ def add_bars_to_map(map_obj, bars):
         bars (list): Liste des bars
     """
     for i, bar in enumerate(bars):
-        color = "red" if i == 0 else "orange" if i < 3 else "green"
+        color = "green" if i == 0 else "lightgreen" if i < 3 else "orange"
         icon = "star" if i == 0 else "glass"
 
         folium.Marker(
