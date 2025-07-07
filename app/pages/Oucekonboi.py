@@ -52,7 +52,7 @@ def calculate_average_distance(bar_lat, bar_lon, friends):
 
 # Fonction pour rechercher des bars autour du barycentre via Overpass API
 @st.cache_data
-def get_bars_around_center(center_lat, center_lon, radius_km: float = 2.0):
+def get_bars_around_center(center_lat, center_lon, radius_km: float = 0.5):
     """
     Recherche des bars autour du centre géographique du groupe d'amis
     en utilisant l'API Overpass d'OpenStreetMap
@@ -223,10 +223,10 @@ with col1:
 with col2:
     radius_km = st.slider(
         "🔍 Rayon de recherche (km)",
-        min_value=0.5,
-        max_value=5.0,
-        value=2.0,
-        step=0.5,
+        min_value=0.05,
+        max_value=2.0,
+        value=0.5,
+        step=0.1,
         help="Distance maximum pour rechercher les bars autour du centre du groupe",
     )
 

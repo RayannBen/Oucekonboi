@@ -9,11 +9,12 @@ st.markdown("### Inscrivez vos amis et leurs adresses")
 
 st.info(
     """
-🌍 **Nouvelle fonctionnalité :** L'application accepte maintenant les adresses partout en France et même dans le monde !
+🌍 **L'application accepte les adresses partout en France et dans le monde !**
 - ✅ Paris et banlieue parisienne
 - ✅ Toute la France (Lyon, Marseille, Bordeaux, etc.)
 - ✅ International (précisez bien la ville et le pays)
-- 🏴󠁧󠁢󠁥󠁮󠁧󠁿 Option pour forcer la recherche à Paris si l'adresse est incomplète
+
+💡 **Conseil :** Soyez précis dans vos adresses en incluant la ville et le code postal pour de meilleurs résultats.
 """
 )
 
@@ -38,18 +39,10 @@ def save_friends(friends):
 
 # Fonction pour géocoder une adresse
 @st.cache_data
-def geocode_address(address, force_paris=False):
+def geocode_address(address):
     try:
         geolocator = Nominatim(user_agent="oucekonboi_app")
-
-        # Si force_paris est activé, on ajoute Paris, France
-        if force_paris:
-            full_address = f"{address}, Paris, France"
-        else:
-            # Sinon, on cherche l'adresse telle quelle
-            full_address = address
-
-        location = geolocator.geocode(full_address)
+        location = geolocator.geocode(address)
         if location:
             return location.latitude, location.longitude, location.address
         return None, None, None
@@ -76,20 +69,13 @@ with st.form("add_friend"):
             placeholder="Ex: 15 rue de Rivoli, 75001 Paris\nou: 123 Main St, Lyon, France",
         )
 
-        # Option pour forcer la recherche à Paris
-        force_paris = st.checkbox(
-            "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Rechercher uniquement à Paris",
-            value=False,
-            help="Cochez cette case si l'adresse saisie est incomplète et doit être recherchée uniquement à Paris",
-        )
-
     submitted = st.form_submit_button("Ajouter l'ami")
 
     if submitted:
         if name and address:
             # Géocoder l'adresse
             with st.spinner("Vérification de l'adresse..."):
-                lat, lon, full_address = geocode_address(address, force_paris)
+                lat, lon, full_address = geocode_address(address)
 
             if lat and lon:
                 # Vérifier si l'ami existe déjà
@@ -121,14 +107,9 @@ with st.form("add_friend"):
                 st.success(f"✅ {name} a été ajouté avec succès!")
                 st.rerun()
             else:
-                if force_paris:
-                    st.error(
-                        "❌ Impossible de localiser cette adresse. Vérifiez qu'elle est bien à Paris."
-                    )
-                else:
-                    st.error(
-                        "❌ Impossible de localiser cette adresse. Vérifiez l'orthographe et incluez la ville/pays si nécessaire."
-                    )
+                st.error(
+                    "❌ Impossible de localiser cette adresse. Vérifiez l'orthographe et incluez la ville/pays si nécessaire."
+                )
         else:
             st.error("❌ Veuillez remplir au moins le nom et l'adresse.")
 
