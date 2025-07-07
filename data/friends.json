@@ -33,5 +33,19 @@
     "address": "2 bis, Rue Winston Churchill, Vilmorin, Massy, Palaiseau, Essonne, France métropolitaine, 91300, France",
     "latitude": 48.7277927,
     "longitude": 2.2576033
+  },
+  {
+    "name": "Polia",
+    "email": "",
+    "address": "53, Rue Didot, Quartier de Plaisance, Paris 14e Arrondissement, Paris, France métropolitaine, 75014, France",
+    "latitude": 48.8311204,
+    "longitude": 2.3197823
+  },
+  {
+    "name": "coquiQueen",
+    "email": "",
+    "address": "11, Rue Victor Hugo, Saint-Cyr-l'École, Versailles, Yvelines, Île-de-France, France métropolitaine, 78210, France",
+    "latitude": 48.799527,
+    "longitude": 2.0619234
   }
 ]
